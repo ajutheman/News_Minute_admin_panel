@@ -26,7 +26,8 @@ class _AdListScreenState extends State<AdListScreen> {
   void _showAddEditDialog(BuildContext context, {Map<String, dynamic>? ad}) {
     final titleController = TextEditingController(text: ad?['title'] ?? '');
     final contentController = TextEditingController(text: ad?['content'] ?? ''); // This holds the image URL
-    final positionController = TextEditingController(text: ad?['position'] ?? 'Homepage_Top');
+    final List<String> positions = ['HeaderTop', 'HomeMiddle', 'SidebarTop', 'ArticleSidebar', 'ArticleBottom', 'TopBanner', 'BottomBanner', 'InsideNews', 'Sidebar', 'Floating'];
+    final positionController = TextEditingController(text: ad?['position'] ?? positions.first);
     String type = ad?['type'] ?? 'Image';
     String status = ad?['status'] ?? 'Active';
     
