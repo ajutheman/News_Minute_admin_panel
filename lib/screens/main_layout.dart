@@ -39,25 +39,36 @@ class _MainLayoutState extends State<MainLayout> {
                 _selectedIndex = index;
               });
             },
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            indicatorColor: Theme.of(context).colorScheme.primaryContainer,
+            backgroundColor: Colors.white,
+            selectedIconTheme: const IconThemeData(color: Color(0xFF2563EB), size: 28),
+            unselectedIconTheme: IconThemeData(color: Colors.grey[400], size: 24),
+            selectedLabelTextStyle: const TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.bold),
+            unselectedLabelTextStyle: TextStyle(color: Colors.grey[600]),
+            useIndicator: true,
+            indicatorColor: const Color(0xFF2563EB).withOpacity(0.1),
             labelType: NavigationRailLabelType.all,
             leading: Column(
               children: [
-                const SizedBox(height: 20),
-                const Icon(Icons.newspaper, color: Color(0xFF2563EB), size: 32),
-                const SizedBox(height: 8),
-                Text('NM Admin', style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 20),
+                const SizedBox(height: 32),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2563EB).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.newspaper_rounded, color: Color(0xFF2563EB), size: 32),
+                ),
+                const SizedBox(height: 32),
               ],
             ),
             trailing: Expanded(
               child: Align(
                 alignment: Alignment.bottomCenter,
                 child: Padding(
-                  padding: const EdgeInsets.only(bottom: 20),
+                  padding: const EdgeInsets.only(bottom: 32),
                   child: IconButton(
-                    icon: const Icon(Icons.logout),
+                    icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
+                    tooltip: 'Logout',
                     onPressed: () => Provider.of<AuthProvider>(context, listen: false).logout(),
                   ),
                 ),
@@ -66,32 +77,32 @@ class _MainLayoutState extends State<MainLayout> {
             destinations: const [
               NavigationRailDestination(
                 icon: Icon(Icons.dashboard_outlined),
-                selectedIcon: Icon(Icons.dashboard),
+                selectedIcon: Icon(Icons.dashboard_rounded),
                 label: Text('Dashboard'),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.newspaper_outlined),
-                selectedIcon: Icon(Icons.newspaper),
+                icon: Icon(Icons.article_outlined),
+                selectedIcon: Icon(Icons.article_rounded),
                 label: Text('News'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.category_outlined),
-                selectedIcon: Icon(Icons.category),
+                selectedIcon: Icon(Icons.category_rounded),
                 label: Text('Categories'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.public_outlined),
-                selectedIcon: Icon(Icons.public),
+                selectedIcon: Icon(Icons.public_rounded),
                 label: Text('Regions'),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.ad_units_outlined),
-                selectedIcon: Icon(Icons.ad_units),
+                icon: Icon(Icons.campaign_outlined),
+                selectedIcon: Icon(Icons.campaign_rounded),
                 label: Text('Ads'),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.people_outline),
-                selectedIcon: Icon(Icons.people),
+                icon: Icon(Icons.people_outlined),
+                selectedIcon: Icon(Icons.people_rounded),
                 label: Text('Users'),
               ),
             ],

@@ -29,16 +29,13 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
         title: Text(isEditing ? 'Edit Category' : 'Add Category'),
         content: Form(
           key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: 'Category Name'),
-                validator: (val) => val!.isEmpty ? 'Enter name' : null,
-              ),
-              // Could add parent selector, isVisible switch etc here
-            ],
+          child: TextFormField(
+            controller: nameController,
+            decoration: const InputDecoration(
+              labelText: 'Category Name',
+              border: OutlineInputBorder(),
+            ),
+            validator: (val) => val!.isEmpty ? 'Enter name' : null,
           ),
         ),
         actions: [
@@ -78,11 +75,22 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Categories'),
+        title: const Text('Categories', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => _showCategoryDialog(context),
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.add),
+              label: const Text('Add Category'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2563EB),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () => _showCategoryDialog(context),
+            ),
           ),
         ],
       ),
@@ -92,50 +100,65 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (provider.categories.isEmpty) {
-            return const Center(child: Text('No categories found. Add one!'));
+            return const Center(child: Text('No categories found.'));
           }
-          return ListView.builder(
+          
+          return GridView.builder(
+            padding: const EdgeInsets.all(24),
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 200,
+              childAspectRatio: 1.2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+            ),
             itemCount: provider.categories.length,
             itemBuilder: (context, index) {
               final cat = provider.categories[index];
-              return ListTile(
-                title: Text(cat['name']),
-                subtitle: Text('ID: ${cat['_id']}'),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.blue),
-                      onPressed: () => _showCategoryDialog(context, cat),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: const Text('Delete Category?'),
-                            content: const Text('This action cannot be undone.'),
-                            actions: [
-                              TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
-                              TextButton(
-                                onPressed: () async {
-                                  await provider.deleteCategory(cat['_id']);
-                                  if (mounted) Navigator.of(ctx).pop();
-                                },
-                                child: const Text('Delete', style: TextStyle(color: Colors.red)),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              );
+              return _buildCategoryCard(context, cat, provider);
             },
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildCategoryCard(BuildContext context, Map<String, dynamic> cat, CategoryProvider provider) {
+    // Generate a consistent color based on char code
+    final color = Colors.primaries[cat['name'].codeUnitAt(0) % Colors.primaries.length];
+    
+    return Card(
+      elevation: 0,
+       shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: InkWell(
+        onTap: () => _showCategoryDialog(context, cat),
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: color.withOpacity(0.1),
+                child: Text(
+                  cat['name'][0].toUpperCase(), 
+                  style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 20)
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                cat['name'],
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
