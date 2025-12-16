@@ -32,7 +32,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('Admin Login', style: Theme.of(context).textTheme.headlineMedium),
+                    const Icon(Icons.newspaper, size: 64, color: Color(0xFF2563EB)),
+                    const SizedBox(height: 16),
+                    Text('NewsMinute', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Text('Admin Portal', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
                     const SizedBox(height: 32),
                     TextFormField(
                       controller: _emailController,

@@ -4,6 +4,9 @@ import '../providers/auth_provider.dart';
 import 'dashboard_screen.dart';
 import 'news/news_list_screen.dart';
 import 'categories/category_list_screen.dart';
+import 'regions/region_list_screen.dart';
+import 'ads/ad_list_screen.dart';
+import 'users/user_list_screen.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -19,9 +22,9 @@ class _MainLayoutState extends State<MainLayout> {
     const DashboardScreen(),
     const NewsListScreen(),
     const CategoryListScreen(),
-    const Center(child: Text('Region Management')), // Placeholder
-    const Center(child: Text('Ad Management')), // Placeholder
-    const Center(child: Text('User Management')), // Placeholder
+    const RegionListScreen(),
+    const AdListScreen(),
+    const UserListScreen(),
   ];
 
   @override
@@ -36,10 +39,17 @@ class _MainLayoutState extends State<MainLayout> {
                 _selectedIndex = index;
               });
             },
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            indicatorColor: Theme.of(context).colorScheme.primaryContainer,
             labelType: NavigationRailLabelType.all,
-            leading: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Text('NEWS ADMIN', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+            leading: Column(
+              children: [
+                const SizedBox(height: 20),
+                const Icon(Icons.newspaper, color: Color(0xFF2563EB), size: 32),
+                const SizedBox(height: 8),
+                Text('NM Admin', style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 20),
+              ],
             ),
             trailing: Expanded(
               child: Align(
@@ -88,7 +98,10 @@ class _MainLayoutState extends State<MainLayout> {
           ),
           const VerticalDivider(thickness: 1, width: 1),
           Expanded(
-            child: _screens[_selectedIndex],
+            child: IndexedStack(
+              index: _selectedIndex,
+              children: _screens,
+            ),
           ),
         ],
       ),

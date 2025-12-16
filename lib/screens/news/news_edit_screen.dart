@@ -1,8 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../providers/news_provider.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/region_provider.dart';
+import '../../services/file_upload_service.dart';
 
 class NewsEditScreen extends StatefulWidget {
   final Map<String, dynamic>? news;
@@ -17,16 +20,24 @@ class _NewsEditScreenState extends State<NewsEditScreen> {
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
   final _slugController = TextEditingController();
+  final _imageUrlController = TextEditingController(); // For manual URL
   
   String? _selectedMainCategoryId;
   String? _selectedRegionType = 'National';
   String? _selectedTargetRegionId;
   String? _selectedNewsType = 'Standard';
+  
+  // Image Upload State
+  bool _isUploading = false;
+  File? _pickedFile;
+  String? _uploadedImageUrl; // Final URL to save
+  bool _useFileUpload = true; // Toggle state
+
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    // Fetch dependencies
     Future.microtask(() {
       Provider.of<CategoryProvider>(context, listen: false).fetchCategories();
       Provider.of<RegionProvider>(context, listen: false).fetchRegions();
@@ -40,6 +51,34 @@ class _NewsEditScreenState extends State<NewsEditScreen> {
       _selectedRegionType = widget.news!['regionType'];
       _selectedNewsType = widget.news!['newsType'];
       _selectedTargetRegionId = widget.news!['targetRegion']?['_id'];
+      
+      _uploadedImageUrl = widget.news!['coverImage'];
+      if (_uploadedImageUrl != null && _uploadedImageUrl!.isNotEmpty) {
+        _imageUrlController.text = _uploadedImageUrl!;
+      }
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _pickedFile = File(image.path);
+        _isUploading = true;
+      });
+
+      // Upload immediately (or could wait for save)
+      final url = await FileUploadService.uploadImage(_pickedFile!);
+      setState(() {
+        _isUploading = false;
+        if (url != null) {
+          _uploadedImageUrl = url;
+          _imageUrlController.text = url; // Sync
+        } else {
+             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Upload Failed')));
+             _pickedFile = null;
+        }
+      });
     }
   }
 
@@ -60,6 +99,56 @@ class _NewsEditScreenState extends State<NewsEditScreen> {
                 validator: (v) => v!.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 16),
+              
+              // --- IMAGE SECTION ---
+              Text('Cover Image', style: Theme.of(context).textTheme.titleSmall),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  ChoiceChip(label: const Text('Upload File'), selected: _useFileUpload, onSelected: (v) => setState(() => _useFileUpload = true)),
+                  const SizedBox(width: 8),
+                  ChoiceChip(label: const Text('Enter URL'), selected: !_useFileUpload, onSelected: (v) => setState(() => _useFileUpload = false)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              
+              if (_useFileUpload) 
+                Row(
+                  children: [
+                    FilledButton.icon(
+                      onPressed: _isUploading ? null : _pickImage,
+                      icon: const Icon(Icons.upload),
+                      label: Text(_isUploading ? 'Uploading...' : 'Pick Image'),
+                    ),
+                    const SizedBox(width: 16),
+                    if (_pickedFile != null) 
+                       const Text('Image Selected', style: TextStyle(color: Colors.green))
+                    else if (_uploadedImageUrl != null)
+                       const Text('Current Image Set', style: TextStyle(color: Colors.blue)),
+                  ],
+                )
+              else 
+                TextFormField(
+                  controller: _imageUrlController,
+                  decoration: const InputDecoration(labelText: 'Image URL', border: OutlineInputBorder(), hintText: 'https://...'),
+                  onChanged: (v) => _uploadedImageUrl = v,
+                ),
+              
+              if (_uploadedImageUrl != null && _uploadedImageUrl!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: AspectRatio(
+                    aspectRatio: 16/9,
+                    child: Image.network(
+                      _uploadedImageUrl!, 
+                      fit: BoxFit.cover,
+                      errorBuilder: (ctx, _, __) => Container(color: Colors.grey[300], child: const Icon(Icons.broken_image)),
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 24),
+              // --- END IMAGE SECTION ---
+
               TextFormField(
                 controller: _slugController,
                 decoration: const InputDecoration(labelText: 'Slug', border: OutlineInputBorder()),
@@ -119,7 +208,7 @@ class _NewsEditScreenState extends State<NewsEditScreen> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () async {
+                  onPressed: _isUploading ? null : () async {
                     if (_formKey.currentState!.validate()) {
                       final newsData = {
                         'title': _titleController.text,
@@ -128,8 +217,9 @@ class _NewsEditScreenState extends State<NewsEditScreen> {
                         'mainCategory': _selectedMainCategoryId,
                         'regionType': _selectedRegionType,
                         'newsType': _selectedNewsType,
-                        if (_selectedTargetRegionId != null) 'targetRegion': _selectedTargetRegionId,
-                        'status': 'Published', // Auto publish for admin for now
+                         if (_selectedTargetRegionId != null) 'targetRegion': _selectedTargetRegionId,
+                        'status': 'Published',
+                        'coverImage': _uploadedImageUrl // Save the image URL
                       };
 
                       final provider = Provider.of<NewsProvider>(context, listen: false);
@@ -137,7 +227,7 @@ class _NewsEditScreenState extends State<NewsEditScreen> {
                       
                       if (success && mounted) {
                         Navigator.pop(context);
-                         Provider.of<NewsProvider>(context, listen: false).fetchNews(); // refresh
+                         Provider.of<NewsProvider>(context, listen: false).fetchNews();
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('News Saved')));
                       }
                     }
